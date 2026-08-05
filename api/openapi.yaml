@@ -1,0 +1,1828 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: dev@emailguard.co
+    name: EmailGuard
+    url: https://emailguard.co
+  description: "Team-scoped REST API at /api/v1. Authenticate with `Authorization:\
+    \ Bearer egsk_live_...` or `X-API-Key`. Forks may register custom routes under\
+    \ /api/v1/tools/* (requires `tools:read` / `tools:write` scopes). Async tool jobs\
+    \ return a `job_id` — poll `GET .../{jobId}/results` until complete. See /docs/api-reference."
+  termsOfService: https://emailguard.co/legal/terms-of-service
+  title: EmailGuard Public API
+  version: "1.0"
+servers:
+- url: //api.emailguard.co
+tags:
+- description: "Analyzes an email for syntax, normalization, typo suggestions, role/public/relay/disposable\
+    \ signals. Invalid TLDs can return suggested_email and suggested_domain while\
+    \ syntax_validation remains false."
+  name: email
+- description: Returns profile fields for the team associated with your API key.
+  name: Teams
+- description: Returns metered feature usage for the team's billing period. Defaults
+    to the current period; use `range=previous` or `range=custom` with `start` and
+    `end` to query other windows.
+  name: Billing
+- description: "Returns every member of the team, including role, profile fields,\
+    \ and join timestamp. Use the `user_id` field when calling member update or remove\
+    \ routes."
+  name: Members
+- description: "Returns invites that have not yet been accepted or expired. Each invite\
+    \ includes the target email, assigned role, and expiry time."
+  name: Invites
+- description: "Returns every delivery channel configured for the team (email, webhook,\
+    \ and other supported types). Use channel IDs when attaching targets to notification\
+    \ rules."
+  name: Channels
+- description: Returns recent notification delivery events for polling integrations.
+    Use this to inspect what was sent and when without configuring a webhook receiver.
+  name: Events
+- description: Returns routing rules that map event types to one or more delivery
+    channels. Each rule includes its enabled state and channel targets.
+  name: Rules
+paths:
+  /api/v1/emails/detect:
+    get:
+      description: "Analyzes an email for syntax, normalization, typo suggestions,\
+        \ role/public/relay/disposable signals. Invalid TLDs can return suggested_email\
+        \ and suggested_domain while syntax_validation remains false."
+      parameters:
+      - description: Email address to analyze
+        explode: true
+        in: query
+        name: email
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailDetectResponse"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+          description: Bad Request
+      summary: Detect email characteristics
+      tags:
+      - email
+  /api/v1/team:
+    get:
+      description: Returns profile fields for the team associated with your API key.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPublicTeamResponse"
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Not Found
+      security:
+      - ApiKeyAuth: []
+      summary: Get team
+      tags:
+      - Teams
+      x-permission: account:read
+      x-gosaas-module: team
+    patch:
+      description: "Updates mutable team profile fields (name, emoji, URL, email).\
+        \ Send only the fields you want to change; omitted fields are left unchanged\
+        \ except `name`, which is required on every request."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTeamInput"
+        description: Team profile fields to update
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPublicTeamResponse"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+      security:
+      - ApiKeyAuth: []
+      summary: Update team
+      tags:
+      - Teams
+      x-permission: account:update
+      x-gosaas-module: team
+  /api/v1/team/billing/usage:
+    get:
+      description: Returns metered feature usage for the team's billing period. Defaults
+        to the current period; use `range=previous` or `range=custom` with `start`
+        and `end` to query other windows.
+      parameters:
+      - description: "Period selector: current, previous, or custom"
+        explode: true
+        in: query
+        name: range
+        required: false
+        schema:
+          enum:
+          - current
+          - previous
+          - custom
+          type: string
+        style: form
+      - description: Custom range start (RFC3339 or YYYY-MM-DD); required when range=custom
+        explode: true
+        in: query
+        name: start
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Custom range end (RFC3339 or YYYY-MM-DD); required when range=custom
+        explode: true
+        in: query
+        name: end
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingUsageResponse"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Not Found
+      security:
+      - ApiKeyAuth: []
+      summary: Get billing usage
+      tags:
+      - Billing
+      x-permission: billing:read
+      x-gosaas-module: team
+  /api/v1/team/members:
+    get:
+      description: "Returns every member of the team, including role, profile fields,\
+        \ and join timestamp. Use the `user_id` field when calling member update or\
+        \ remove routes."
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListPublicTeamMembersResponse"
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Not Found
+      security:
+      - ApiKeyAuth: []
+      summary: List team members
+      tags:
+      - Members
+      x-permission: members:read
+      x-gosaas-module: team
+  /api/v1/team/members/invites:
+    get:
+      description: "Returns invites that have not yet been accepted or expired. Each\
+        \ invite includes the target email, assigned role, and expiry time."
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListPublicTeamInvitesResponse"
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+      security:
+      - ApiKeyAuth: []
+      summary: List pending team invites
+      tags:
+      - Invites
+      x-permission: members:read
+      x-gosaas-module: team
+    post:
+      description: Sends an email invite to join the team with the specified role.
+        The invitee must accept before they appear in the members list.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteTeamMemberInput"
+        description: Invitee email and role to assign on acceptance
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+      security:
+      - ApiKeyAuth: []
+      summary: Invite a team member
+      tags:
+      - Invites
+      x-permission: members:create
+      x-gosaas-module: team
+  /api/v1/team/members/invites/{inviteId}:
+    delete:
+      description: Revokes a pending invite so it can no longer be accepted. The invite
+        is identified by its UUID from the list invites response.
+      parameters:
+      - description: UUID of the pending invite to cancel
+        explode: false
+        in: path
+        name: inviteId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Not Found
+      security:
+      - ApiKeyAuth: []
+      summary: Cancel a pending invite
+      tags:
+      - Invites
+      x-permission: members:delete
+      x-gosaas-module: team
+  /api/v1/team/members/{userId}:
+    delete:
+      description: Removes a user from the team. Identify the member by user account
+        UUID in the path. The team owner cannot be removed through this endpoint.
+      parameters:
+      - description: User account UUID of the member to remove
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Not Found
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a team member
+      tags:
+      - Members
+      x-permission: members:delete
+      x-gosaas-module: team
+    patch:
+      description: Changes a member's role or internal notes. Identify the member
+        by user account UUID in the path (not the team membership record ID).
+      parameters:
+      - description: User account UUID of the member to update
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTeamMemberInput"
+        description: New role and/or notes for the member
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Not Found
+      security:
+      - ApiKeyAuth: []
+      summary: Update a team member role
+      tags:
+      - Members
+      x-permission: members:update
+      x-gosaas-module: team
+  /api/v1/team/notifications/channels:
+    get:
+      description: "Returns every delivery channel configured for the team (email,\
+        \ webhook, and other supported types). Use channel IDs when attaching targets\
+        \ to notification rules."
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetNotificationChannelsResponse"
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+      security:
+      - ApiKeyAuth: []
+      summary: List notification channels
+      tags:
+      - Channels
+      x-permission: notifications:read
+      x-gosaas-module:
+      - team
+      - notifications
+    post:
+      description: Creates a delivery channel for the team. Email channels require
+        verification; webhook channels can be verified with the test endpoint.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateNotificationChannelInput"
+        description: "Channel name, type, and type-specific configuration"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetNotificationChannelResponse"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+      security:
+      - ApiKeyAuth: []
+      summary: Create notification channel
+      tags:
+      - Channels
+      x-permission: notifications:create
+      x-gosaas-module:
+      - team
+      - notifications
+  /api/v1/team/notifications/channels/{channelId}:
+    delete:
+      description: Permanently deletes a channel and removes it from any rules that
+        reference it.
+      parameters:
+      - description: UUID of the notification channel to delete
+        explode: false
+        in: path
+        name: channelId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+      security:
+      - ApiKeyAuth: []
+      summary: Delete notification channel
+      tags:
+      - Channels
+      x-permission: notifications:delete
+      x-gosaas-module:
+      - team
+      - notifications
+    put:
+      description: Updates a channel's display name or configuration. Send only fields
+        you want to change.
+      parameters:
+      - description: UUID of the notification channel to update
+        explode: false
+        in: path
+        name: channelId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateNotificationChannelInput"
+        description: Updated channel name and/or configuration
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetNotificationChannelResponse"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+      security:
+      - ApiKeyAuth: []
+      summary: Update notification channel
+      tags:
+      - Channels
+      x-permission: notifications:update
+      x-gosaas-module:
+      - team
+      - notifications
+  /api/v1/team/notifications/channels/{channelId}/test:
+    post:
+      description: Sends a sample payload to a webhook channel to confirm the endpoint
+        is reachable. On success the channel is marked verified.
+      parameters:
+      - description: UUID of the webhook channel to test
+        explode: false
+        in: path
+        name: channelId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+      security:
+      - ApiKeyAuth: []
+      summary: Test notification channel
+      tags:
+      - Channels
+      x-permission: notifications:update
+      x-gosaas-module:
+      - team
+      - notifications
+  /api/v1/team/notifications/events:
+    get:
+      description: Returns recent notification delivery events for polling integrations.
+        Use this to inspect what was sent and when without configuring a webhook receiver.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetNotificationEventsResponse"
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+      security:
+      - ApiKeyAuth: []
+      summary: List notification events
+      tags:
+      - Events
+      x-permission: notifications:read
+      x-gosaas-module:
+      - team
+      - notifications
+  /api/v1/team/notifications/rules:
+    get:
+      description: Returns routing rules that map event types to one or more delivery
+        channels. Each rule includes its enabled state and channel targets.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetNotificationRulesResponse"
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+      security:
+      - ApiKeyAuth: []
+      summary: List notification rules
+      tags:
+      - Rules
+      x-permission: notifications:read
+      x-gosaas-module:
+      - team
+      - notifications
+    post:
+      description: Creates a rule that delivers matching events to the specified channels.
+        At least one event type and one channel target are required.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateNotificationRuleInput"
+        description: "Rule name, event types, and channel targets"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdDataResponse"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+      security:
+      - ApiKeyAuth: []
+      summary: Create notification rule
+      tags:
+      - Rules
+      x-permission: notifications:create
+      x-gosaas-module:
+      - team
+      - notifications
+  /api/v1/team/notifications/rules/{ruleId}:
+    delete:
+      description: Permanently deletes a routing rule and its channel assignments.
+      parameters:
+      - description: UUID of the notification rule to delete
+        explode: false
+        in: path
+        name: ruleId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+      security:
+      - ApiKeyAuth: []
+      summary: Delete notification rule
+      tags:
+      - Rules
+      x-permission: notifications:delete
+      x-gosaas-module:
+      - team
+      - notifications
+    put:
+      description: "Updates a rule's name, description, event types, enabled flag,\
+        \ or channel targets. When `channels` is sent it replaces all existing targets."
+      parameters:
+      - description: UUID of the notification rule to update
+        explode: false
+        in: path
+        name: ruleId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateNotificationRuleInput"
+        description: Fields to update on the rule
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BaseResponse"
+          description: Forbidden
+      security:
+      - ApiKeyAuth: []
+      summary: Update notification rule
+      tags:
+      - Rules
+      x-permission: notifications:update
+      x-gosaas-module:
+      - team
+      - notifications
+components:
+  schemas:
+    EmailDetectResponse:
+      example:
+        code: code
+        data:
+          detection_source: detection_source
+          disposable: true
+          disposable_provider: disposable_provider
+          domain: domain
+          email: email
+          normalized: normalized
+          public_domain: true
+          relay_domain: true
+          relay_provider: relay_provider
+          role_address: true
+          subaddressing: true
+          suggested_domain: suggested_domain
+          suggested_email: suggested_email
+          syntax_validation: true
+        message: message
+      properties:
+        code:
+          description: Machine-readable status code (for example OK or INVALID_BODY).
+          type: string
+        data:
+          $ref: "#/components/schemas/EmailDetectData"
+        message:
+          description: Human-readable detail when the code is not OK.
+          type: string
+      required:
+      - code
+      type: object
+    EmailDetectData:
+      example:
+        detection_source: detection_source
+        disposable: true
+        disposable_provider: disposable_provider
+        domain: domain
+        email: email
+        normalized: normalized
+        public_domain: true
+        relay_domain: true
+        relay_provider: relay_provider
+        role_address: true
+        subaddressing: true
+        suggested_domain: suggested_domain
+        suggested_email: suggested_email
+        syntax_validation: true
+      properties:
+        detection_source:
+          type: string
+        disposable:
+          type: boolean
+        disposable_provider:
+          type: string
+        domain:
+          type: string
+        email:
+          type: string
+        normalized:
+          type: string
+        public_domain:
+          type: boolean
+        relay_domain:
+          type: boolean
+        relay_provider:
+          type: string
+        role_address:
+          type: boolean
+        subaddressing:
+          type: boolean
+        suggested_domain:
+          description: Corrected domain candidate when a domain or TLD typo rule matches.
+          type: string
+        suggested_email:
+          description: Corrected email candidate when a domain or TLD typo rule matches.
+          type: string
+        syntax_validation:
+          type: boolean
+      type: object
+    MessageResponse:
+      example:
+        code: code
+        message: message
+      properties:
+        code:
+          description: Machine-readable status code (for example OK or INVALID_BODY).
+          type: string
+        message:
+          description: Human-readable detail when the code is not OK.
+          type: string
+      required:
+      - code
+      type: object
+    GetPublicTeamResponse:
+      example:
+        code: code
+        data:
+          email: email
+          emoji: emoji
+          id: id
+          name: name
+          type: type
+          url: url
+        message: message
+      properties:
+        code:
+          description: Machine-readable status code (for example OK or INVALID_BODY).
+          type: string
+        data:
+          $ref: "#/components/schemas/PublicTeamResponse"
+        message:
+          description: Human-readable detail when the code is not OK.
+          type: string
+      required:
+      - code
+      type: object
+    PublicTeamResponse:
+      example:
+        email: email
+        emoji: emoji
+        id: id
+        name: name
+        type: type
+        url: url
+      properties:
+        email:
+          description: Contact email for the workspace.
+          type: string
+        emoji:
+          description: Avatar emoji.
+          type: string
+        id:
+          description: Team UUID.
+          type: string
+        name:
+          description: Display name.
+          type: string
+        type:
+          description: Team kind (for example team or personal).
+          type: string
+        url:
+          description: Public website URL.
+          type: string
+      type: object
+    BaseResponse:
+      example:
+        code: code
+        message: message
+      properties:
+        code:
+          description: Machine-readable status code (for example OK or INVALID_BODY).
+          type: string
+        message:
+          description: Human-readable detail when the code is not OK.
+          type: string
+      required:
+      - code
+      type: object
+    UpdateTeamInput:
+      example:
+        email: email
+        emoji: emoji
+        name: name
+        url: url
+      properties:
+        email:
+          description: Contact email address for the team workspace.
+          type: string
+        emoji:
+          description: Single grapheme emoji shown as the team avatar in the product
+            UI.
+          type: string
+        name:
+          description: Human-readable team name.
+          type: string
+        url:
+          description: Public website URL for the team.
+          type: string
+      required:
+      - name
+      type: object
+    BillingUsageResponse:
+      example:
+        code: code
+        data:
+        - events:
+          - delta: 0
+            event_type: event_type
+            metadata: metadata
+            usage_after: 6
+            usage_before: 1
+          - delta: 0
+            event_type: event_type
+            metadata: metadata
+            usage_after: 6
+            usage_before: 1
+          feature_key: feature_key
+          limit: 5
+          period_end: period_end
+          period_start: period_start
+          usage: 5
+        - events:
+          - delta: 0
+            event_type: event_type
+            metadata: metadata
+            usage_after: 6
+            usage_before: 1
+          - delta: 0
+            event_type: event_type
+            metadata: metadata
+            usage_after: 6
+            usage_before: 1
+          feature_key: feature_key
+          limit: 5
+          period_end: period_end
+          period_start: period_start
+          usage: 5
+        message: message
+      properties:
+        code:
+          description: Machine-readable status code (for example OK or INVALID_BODY).
+          type: string
+        data:
+          items:
+            $ref: "#/components/schemas/BillingUsageItem"
+          type: array
+        message:
+          description: Human-readable detail when the code is not OK.
+          type: string
+      required:
+      - code
+      type: object
+    BillingUsageItem:
+      example:
+        events:
+        - delta: 0
+          event_type: event_type
+          metadata: metadata
+          usage_after: 6
+          usage_before: 1
+        - delta: 0
+          event_type: event_type
+          metadata: metadata
+          usage_after: 6
+          usage_before: 1
+        feature_key: feature_key
+        limit: 5
+        period_end: period_end
+        period_start: period_start
+        usage: 5
+      properties:
+        events:
+          items:
+            $ref: "#/components/schemas/BillingUsageEvent"
+          type: array
+        feature_key:
+          type: string
+        limit:
+          type: integer
+        period_end:
+          type: string
+        period_start:
+          type: string
+        usage:
+          type: integer
+      required:
+      - feature_key
+      - period_end
+      - period_start
+      - usage
+      type: object
+    BillingUsageEvent:
+      example:
+        delta: 0
+        event_type: event_type
+        metadata: metadata
+        usage_after: 6
+        usage_before: 1
+      properties:
+        delta:
+          type: integer
+        event_type:
+          type: string
+        metadata:
+          type: string
+        usage_after:
+          type: integer
+        usage_before:
+          type: integer
+      required:
+      - delta
+      - event_type
+      - metadata
+      - usage_after
+      - usage_before
+      type: object
+    ListPublicTeamMembersResponse:
+      example:
+        code: code
+        data:
+        - created_at: created_at
+          email: email
+          emoji: emoji
+          first_name: first_name
+          id: id
+          last_name: last_name
+          notes: notes
+          role: role
+          user_id: user_id
+        - created_at: created_at
+          email: email
+          emoji: emoji
+          first_name: first_name
+          id: id
+          last_name: last_name
+          notes: notes
+          role: role
+          user_id: user_id
+        message: message
+      properties:
+        code:
+          description: Machine-readable status code (for example OK or INVALID_BODY).
+          type: string
+        data:
+          items:
+            $ref: "#/components/schemas/PublicTeamMemberResponse"
+          type: array
+        message:
+          description: Human-readable detail when the code is not OK.
+          type: string
+      required:
+      - code
+      type: object
+    PublicTeamMemberResponse:
+      example:
+        created_at: created_at
+        email: email
+        emoji: emoji
+        first_name: first_name
+        id: id
+        last_name: last_name
+        notes: notes
+        role: role
+        user_id: user_id
+      properties:
+        created_at:
+          description: When the member joined the team (RFC3339).
+          type: string
+        email:
+          description: Member login email.
+          type: string
+        emoji:
+          description: User profile emoji.
+          type: string
+        first_name:
+          description: Member given name.
+          type: string
+        id:
+          description: Team membership record ID.
+          type: string
+        last_name:
+          description: Member family name.
+          type: string
+        notes:
+          description: Internal notes stored on the membership.
+          type: string
+        role:
+          description: "Team role (for example Owner, Admin, Member)."
+          type: string
+        user_id:
+          description: User account ID for this member.
+          type: string
+      required:
+      - created_at
+      - email
+      - first_name
+      - id
+      - last_name
+      - role
+      - user_id
+      type: object
+    ListPublicTeamInvitesResponse:
+      example:
+        code: code
+        data:
+        - email: email
+          expires_at: expires_at
+          id: id
+          role: role
+        - email: email
+          expires_at: expires_at
+          id: id
+          role: role
+        message: message
+      properties:
+        code:
+          description: Machine-readable status code (for example OK or INVALID_BODY).
+          type: string
+        data:
+          items:
+            $ref: "#/components/schemas/PublicTeamInviteResponse"
+          type: array
+        message:
+          description: Human-readable detail when the code is not OK.
+          type: string
+      required:
+      - code
+      type: object
+    PublicTeamInviteResponse:
+      example:
+        email: email
+        expires_at: expires_at
+        id: id
+        role: role
+      properties:
+        email:
+          description: Email address the invite was sent to.
+          type: string
+        expires_at:
+          description: When the invite expires if not accepted (RFC3339).
+          type: string
+        id:
+          description: Invite record ID.
+          type: string
+        role:
+          description: Role the invitee will receive when they accept.
+          type: string
+      required:
+      - email
+      - expires_at
+      - id
+      - role
+      type: object
+    InviteTeamMemberInput:
+      example:
+        email: email
+        role: role
+      properties:
+        email:
+          description: Email address that will receive the invite.
+          type: string
+        role:
+          description: "Team role to assign when the invite is accepted (for example\
+            \ Owner, Admin, Member). See [Team roles and permissions](/docs/knowledge-base/team-roles-and-permissions)."
+          type: string
+      required:
+      - email
+      - role
+      type: object
+    UpdateTeamMemberInput:
+      example:
+        id: id
+        notes: notes
+        role: role
+      properties:
+        id:
+          description: "Internal team member record ID. When calling the public API,\
+            \ this is set from the path userId."
+          type: string
+        notes:
+          description: Internal notes about the member. Omit to leave unchanged.
+          type: string
+        role:
+          description: "New team role (for example Owner, Admin, Member). Omit to\
+            \ leave unchanged. See [Team roles and permissions](/docs/knowledge-base/team-roles-and-permissions)."
+          type: string
+      required:
+      - id
+      type: object
+    GetNotificationChannelsResponse:
+      example:
+        code: code
+        data:
+        - config:
+            key: ""
+          created_at: created_at
+          id: id
+          is_verified: true
+          name: name
+          type: type
+        - config:
+            key: ""
+          created_at: created_at
+          id: id
+          is_verified: true
+          name: name
+          type: type
+        message: message
+      properties:
+        code:
+          description: Machine-readable status code (for example OK or INVALID_BODY).
+          type: string
+        data:
+          items:
+            $ref: "#/components/schemas/NotificationChannelResponse"
+          type: array
+        message:
+          description: Human-readable detail when the code is not OK.
+          type: string
+      required:
+      - code
+      type: object
+    NotificationChannelResponse:
+      example:
+        config:
+          key: ""
+        created_at: created_at
+        id: id
+        is_verified: true
+        name: name
+        type: type
+      properties:
+        config:
+          additionalProperties: true
+          description: Type-specific configuration. Sensitive values may be redacted
+            in responses.
+          type: object
+        created_at:
+          description: When the channel was created (RFC3339).
+          type: string
+        id:
+          description: Channel record ID.
+          type: string
+        is_verified:
+          description: Whether the channel has completed verification (email link
+            or webhook test).
+          type: boolean
+        name:
+          description: Display name in notification settings.
+          type: string
+        type:
+          description: Channel type (for example email or webhook).
+          type: string
+      type: object
+    CreateNotificationChannelInput:
+      example:
+        config:
+          key: ""
+        name: name
+        type: type
+      properties:
+        config:
+          additionalProperties: true
+          description: "Type-specific configuration (email address, webhook URL, headers,\
+            \ and so on)."
+          type: object
+        name:
+          description: Display name shown in team notification settings.
+          type: string
+        type:
+          description: Channel type (for example email or webhook).
+          type: string
+      required:
+      - name
+      - type
+      type: object
+    GetNotificationChannelResponse:
+      example:
+        code: code
+        data:
+          config:
+            key: ""
+          created_at: created_at
+          id: id
+          is_verified: true
+          name: name
+          type: type
+        message: message
+      properties:
+        code:
+          description: Machine-readable status code (for example OK or INVALID_BODY).
+          type: string
+        data:
+          $ref: "#/components/schemas/NotificationChannelResponse"
+        message:
+          description: Human-readable detail when the code is not OK.
+          type: string
+      required:
+      - code
+      type: object
+    UpdateNotificationChannelInput:
+      example:
+        config:
+          key: ""
+        name: name
+      properties:
+        config:
+          additionalProperties: true
+          description: Updated type-specific configuration. Omit to leave unchanged.
+          type: object
+        name:
+          description: Updated display name. Omit to leave unchanged.
+          type: string
+      type: object
+    GetNotificationEventsResponse:
+      example:
+        code: code
+        data:
+        - data
+        - data
+        message: message
+      properties:
+        code:
+          description: Machine-readable status code (for example OK or INVALID_BODY).
+          type: string
+        data:
+          items:
+            type: string
+          type: array
+        message:
+          description: Human-readable detail when the code is not OK.
+          type: string
+      required:
+      - code
+      type: object
+    GetNotificationRulesResponse:
+      example:
+        code: code
+        data:
+        - channels:
+          - channel_id: channel_id
+            channel_name: channel_name
+            channel_type: channel_type
+            id: id
+            predefined: predefined
+            target_user_id: target_user_id
+          - channel_id: channel_id
+            channel_name: channel_name
+            channel_type: channel_type
+            id: id
+            predefined: predefined
+            target_user_id: target_user_id
+          conditions:
+            key: ""
+          created_at: created_at
+          description: description
+          event_types:
+          - event_types
+          - event_types
+          id: id
+          is_enabled: true
+          name: name
+        - channels:
+          - channel_id: channel_id
+            channel_name: channel_name
+            channel_type: channel_type
+            id: id
+            predefined: predefined
+            target_user_id: target_user_id
+          - channel_id: channel_id
+            channel_name: channel_name
+            channel_type: channel_type
+            id: id
+            predefined: predefined
+            target_user_id: target_user_id
+          conditions:
+            key: ""
+          created_at: created_at
+          description: description
+          event_types:
+          - event_types
+          - event_types
+          id: id
+          is_enabled: true
+          name: name
+        message: message
+      properties:
+        code:
+          description: Machine-readable status code (for example OK or INVALID_BODY).
+          type: string
+        data:
+          items:
+            $ref: "#/components/schemas/NotificationRuleResponse"
+          type: array
+        message:
+          description: Human-readable detail when the code is not OK.
+          type: string
+      required:
+      - code
+      type: object
+    NotificationRuleResponse:
+      example:
+        channels:
+        - channel_id: channel_id
+          channel_name: channel_name
+          channel_type: channel_type
+          id: id
+          predefined: predefined
+          target_user_id: target_user_id
+        - channel_id: channel_id
+          channel_name: channel_name
+          channel_type: channel_type
+          id: id
+          predefined: predefined
+          target_user_id: target_user_id
+        conditions:
+          key: ""
+        created_at: created_at
+        description: description
+        event_types:
+        - event_types
+        - event_types
+        id: id
+        is_enabled: true
+        name: name
+      properties:
+        channels:
+          description: Channel targets notified when the rule matches.
+          items:
+            $ref: "#/components/schemas/NotificationRuleChannelResponse"
+          type: array
+        conditions:
+          additionalProperties: true
+          description: Optional conditions (e.g. usage threshold percents).
+          type: object
+        created_at:
+          description: When the rule was created (RFC3339).
+          type: string
+        description:
+          description: Optional longer description.
+          type: string
+        event_types:
+          description: Event types that trigger this rule.
+          items:
+            type: string
+          type: array
+        id:
+          description: Rule record ID.
+          type: string
+        is_enabled:
+          description: Whether the rule is actively delivering events.
+          type: boolean
+        name:
+          description: Display name for the rule.
+          type: string
+      type: object
+    NotificationRuleChannelResponse:
+      example:
+        channel_id: channel_id
+        channel_name: channel_name
+        channel_type: channel_type
+        id: id
+        predefined: predefined
+        target_user_id: target_user_id
+      properties:
+        channel_id:
+          description: "Linked custom channel ID, if any."
+          type: string
+        channel_name:
+          description: "Name of the linked channel, when resolved."
+          type: string
+        channel_type:
+          description: "Type of the linked channel, when resolved."
+          type: string
+        id:
+          description: Assignment record ID.
+          type: string
+        predefined:
+          description: Built-in channel identifier when not using a custom channel.
+          type: string
+        target_user_id:
+          description: User ID when delivery is scoped to one member.
+          type: string
+      type: object
+    CreateNotificationRuleInput:
+      example:
+        channels:
+        - channel_id: channel_id
+          predefined: predefined
+          target_user_id: target_user_id
+        - channel_id: channel_id
+          predefined: predefined
+          target_user_id: target_user_id
+        conditions:
+          key: ""
+        description: description
+        event_types:
+        - event_types
+        - event_types
+        is_enabled: true
+        name: name
+      properties:
+        channels:
+          description: One or more channel targets to notify when matching events
+            occur.
+          items:
+            $ref: "#/components/schemas/NotificationRuleChannelInput"
+          type: array
+        conditions:
+          additionalProperties: true
+          description: Optional rule conditions (e.g. usage_threshold for USAGE_API_THRESHOLD).
+          type: object
+        description:
+          description: Optional longer description of what the rule does.
+          type: string
+        event_types:
+          description: Event type identifiers this rule listens for (at least one
+            required).
+          items:
+            type: string
+          minItems: 1
+          type: array
+        is_enabled:
+          description: "When false, the rule is stored but does not deliver events."
+          type: boolean
+        name:
+          description: Display name for the rule.
+          type: string
+      required:
+      - channels
+      - event_types
+      - name
+      type: object
+    NotificationRuleChannelInput:
+      example:
+        channel_id: channel_id
+        predefined: predefined
+        target_user_id: target_user_id
+      properties:
+        channel_id:
+          description: "UUID of a team notification channel. Use this or predefined,\
+            \ not both."
+          type: string
+        predefined:
+          description: Built-in channel identifier when not using a custom channel.
+          type: string
+        target_user_id:
+          description: Restrict delivery to a specific team member's user ID.
+          type: string
+      type: object
+    IdDataResponse:
+      example:
+        code: code
+        data:
+          id: id
+        message: message
+      properties:
+        code:
+          description: Machine-readable status code (for example OK or INVALID_BODY).
+          type: string
+        data:
+          $ref: "#/components/schemas/IdDataStruct"
+        message:
+          description: Human-readable detail when the code is not OK.
+          type: string
+      required:
+      - code
+      type: object
+    IdDataStruct:
+      example:
+        id: id
+      properties:
+        id:
+          description: UUID of the created or referenced record.
+          type: string
+      type: object
+    UpdateNotificationRuleInput:
+      example:
+        channels:
+        - channel_id: channel_id
+          predefined: predefined
+          target_user_id: target_user_id
+        - channel_id: channel_id
+          predefined: predefined
+          target_user_id: target_user_id
+        conditions:
+          key: ""
+        description: description
+        event_types:
+        - event_types
+        - event_types
+        is_enabled: true
+        name: name
+      properties:
+        channels:
+          description: Replaces all channel targets when provided.
+          items:
+            $ref: "#/components/schemas/NotificationRuleChannelInput"
+          type: array
+        conditions:
+          additionalProperties: true
+          description: Updated conditions. Omit to leave unchanged.
+          type: object
+        description:
+          description: Updated description. Omit to leave unchanged.
+          type: string
+        event_types:
+          description: Updated event types. Omit to leave unchanged.
+          items:
+            type: string
+          type: array
+        is_enabled:
+          description: Enable or disable delivery for this rule.
+          type: boolean
+        name:
+          description: Updated display name. Omit to leave unchanged.
+          type: string
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      description: "Team-scoped API key via `Authorization: Bearer egsk_live_...`\
+        \ or `X-API-Key: egsk_live_...`. OAuth and session cookies are not supported\
+        \ on /api/v1."
+      in: header
+      name: Authorization
+      type: apiKey
+    BasicAuth:
+      scheme: basic
+      type: http
+    BearerAuth:
+      description: Type "Bearer" followed by a space and JWT token.
+      in: header
+      name: Authorization
+      type: apiKey
+x-tagGroups:
+- name: Account
+  tags:
+  - Teams
+- name: Team
+  tags:
+  - Members
+  - Invites
+- name: Billing
+  tags:
+  - Billing
+- name: Notifications
+  tags:
+  - Channels
+  - Events
+  - Rules
+- name: email
+  tags:
+  - email
