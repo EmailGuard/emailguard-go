@@ -4,11 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**Confidence** | Pointer to **string** | high, medium, or low when a disposable verdict includes a confidence signal. | [optional] 
 **DetectionSource** | Pointer to **string** |  | [optional] 
 **Disposable** | Pointer to **bool** |  | [optional] 
 **DisposableProvider** | Pointer to **string** |  | [optional] 
 **Domain** | Pointer to **string** |  | [optional] 
 **Email** | Pointer to **string** |  | [optional] 
+**Evidence** | Pointer to [**EmailDetectEvidence**](EmailDetectEvidence.md) |  | [optional] 
 **Normalized** | Pointer to **string** |  | [optional] 
 **PublicDomain** | Pointer to **bool** |  | [optional] 
 **RelayDomain** | Pointer to **bool** |  | [optional] 
@@ -37,6 +39,31 @@ will change when the set of required properties is changed
 NewEmailDetectDataWithDefaults instantiates a new EmailDetectData object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
+
+### GetConfidence
+
+`func (o *EmailDetectData) GetConfidence() string`
+
+GetConfidence returns the Confidence field if non-nil, zero value otherwise.
+
+### GetConfidenceOk
+
+`func (o *EmailDetectData) GetConfidenceOk() (*string, bool)`
+
+GetConfidenceOk returns a tuple with the Confidence field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetConfidence
+
+`func (o *EmailDetectData) SetConfidence(v string)`
+
+SetConfidence sets Confidence field to given value.
+
+### HasConfidence
+
+`func (o *EmailDetectData) HasConfidence() bool`
+
+HasConfidence returns a boolean if a field has been set.
 
 ### GetDetectionSource
 
@@ -162,6 +189,31 @@ SetEmail sets Email field to given value.
 `func (o *EmailDetectData) HasEmail() bool`
 
 HasEmail returns a boolean if a field has been set.
+
+### GetEvidence
+
+`func (o *EmailDetectData) GetEvidence() EmailDetectEvidence`
+
+GetEvidence returns the Evidence field if non-nil, zero value otherwise.
+
+### GetEvidenceOk
+
+`func (o *EmailDetectData) GetEvidenceOk() (*EmailDetectEvidence, bool)`
+
+GetEvidenceOk returns a tuple with the Evidence field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetEvidence
+
+`func (o *EmailDetectData) SetEvidence(v EmailDetectEvidence)`
+
+SetEvidence sets Evidence field to given value.
+
+### HasEvidence
+
+`func (o *EmailDetectData) HasEvidence() bool`
+
+HasEvidence returns a boolean if a field has been set.
 
 ### GetNormalized
 

@@ -3,7 +3,7 @@ EmailGuard Public API
 
 Team-scoped REST API at /api/v1. Authenticate with `Authorization: Bearer egsk_live_...` or `X-API-Key`. Forks may register custom routes under /api/v1/tools/_* (requires `tools:read` / `tools:write` scopes). Async tool jobs return a `job_id` — poll `GET .../{jobId}/results` until complete. See /docs/api-reference.
 
-API version: 1.0
+API version: 1.1
 Contact: dev@emailguard.co
 */
 
@@ -20,11 +20,14 @@ var _ MappedNullable = &EmailDetectData{}
 
 // EmailDetectData struct for EmailDetectData
 type EmailDetectData struct {
+	// high, medium, or low when a disposable verdict includes a confidence signal.
+	Confidence *string `json:"confidence,omitempty"`
 	DetectionSource *string `json:"detection_source,omitempty"`
 	Disposable *bool `json:"disposable,omitempty"`
 	DisposableProvider *string `json:"disposable_provider,omitempty"`
 	Domain *string `json:"domain,omitempty"`
 	Email *string `json:"email,omitempty"`
+	Evidence *EmailDetectEvidence `json:"evidence,omitempty"`
 	Normalized *string `json:"normalized,omitempty"`
 	PublicDomain *bool `json:"public_domain,omitempty"`
 	RelayDomain *bool `json:"relay_domain,omitempty"`
@@ -53,6 +56,38 @@ func NewEmailDetectData() *EmailDetectData {
 func NewEmailDetectDataWithDefaults() *EmailDetectData {
 	this := EmailDetectData{}
 	return &this
+}
+
+// GetConfidence returns the Confidence field value if set, zero value otherwise.
+func (o *EmailDetectData) GetConfidence() string {
+	if o == nil || IsNil(o.Confidence) {
+		var ret string
+		return ret
+	}
+	return *o.Confidence
+}
+
+// GetConfidenceOk returns a tuple with the Confidence field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *EmailDetectData) GetConfidenceOk() (*string, bool) {
+	if o == nil || IsNil(o.Confidence) {
+		return nil, false
+	}
+	return o.Confidence, true
+}
+
+// HasConfidence returns a boolean if a field has been set.
+func (o *EmailDetectData) HasConfidence() bool {
+	if o != nil && !IsNil(o.Confidence) {
+		return true
+	}
+
+	return false
+}
+
+// SetConfidence gets a reference to the given string and assigns it to the Confidence field.
+func (o *EmailDetectData) SetConfidence(v string) {
+	o.Confidence = &v
 }
 
 // GetDetectionSource returns the DetectionSource field value if set, zero value otherwise.
@@ -213,6 +248,38 @@ func (o *EmailDetectData) HasEmail() bool {
 // SetEmail gets a reference to the given string and assigns it to the Email field.
 func (o *EmailDetectData) SetEmail(v string) {
 	o.Email = &v
+}
+
+// GetEvidence returns the Evidence field value if set, zero value otherwise.
+func (o *EmailDetectData) GetEvidence() EmailDetectEvidence {
+	if o == nil || IsNil(o.Evidence) {
+		var ret EmailDetectEvidence
+		return ret
+	}
+	return *o.Evidence
+}
+
+// GetEvidenceOk returns a tuple with the Evidence field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *EmailDetectData) GetEvidenceOk() (*EmailDetectEvidence, bool) {
+	if o == nil || IsNil(o.Evidence) {
+		return nil, false
+	}
+	return o.Evidence, true
+}
+
+// HasEvidence returns a boolean if a field has been set.
+func (o *EmailDetectData) HasEvidence() bool {
+	if o != nil && !IsNil(o.Evidence) {
+		return true
+	}
+
+	return false
+}
+
+// SetEvidence gets a reference to the given EmailDetectEvidence and assigns it to the Evidence field.
+func (o *EmailDetectData) SetEvidence(v EmailDetectEvidence) {
+	o.Evidence = &v
 }
 
 // GetNormalized returns the Normalized field value if set, zero value otherwise.
@@ -513,6 +580,9 @@ func (o EmailDetectData) MarshalJSON() ([]byte, error) {
 
 func (o EmailDetectData) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
+	if !IsNil(o.Confidence) {
+		toSerialize["confidence"] = o.Confidence
+	}
 	if !IsNil(o.DetectionSource) {
 		toSerialize["detection_source"] = o.DetectionSource
 	}
@@ -527,6 +597,9 @@ func (o EmailDetectData) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.Email) {
 		toSerialize["email"] = o.Email
+	}
+	if !IsNil(o.Evidence) {
+		toSerialize["evidence"] = o.Evidence
 	}
 	if !IsNil(o.Normalized) {
 		toSerialize["normalized"] = o.Normalized

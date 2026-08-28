@@ -23,6 +23,7 @@ docs/CreateNotificationChannelInput.md
 docs/CreateNotificationRuleInput.md
 docs/EmailAPI.md
 docs/EmailDetectData.md
+docs/EmailDetectEvidence.md
 docs/EmailDetectResponse.md
 docs/EventsAPI.md
 docs/GetNotificationChannelResponse.md
@@ -61,6 +62,7 @@ model_billing_usage_response.go
 model_create_notification_channel_input.go
 model_create_notification_rule_input.go
 model_email_detect_data.go
+model_email_detect_evidence.go
 model_email_detect_response.go
 model_get_notification_channel_response.go
 model_get_notification_channels_response.go

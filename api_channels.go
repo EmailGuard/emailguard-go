@@ -3,7 +3,7 @@ EmailGuard Public API
 
 Team-scoped REST API at /api/v1. Authenticate with `Authorization: Bearer egsk_live_...` or `X-API-Key`. Forks may register custom routes under /api/v1/tools/_* (requires `tools:read` / `tools:write` scopes). Async tool jobs return a `job_id` — poll `GET .../{jobId}/results` until complete. See /docs/api-reference.
 
-API version: 1.0
+API version: 1.1
 Contact: dev@emailguard.co
 */
 
