@@ -30,6 +30,27 @@ For local examples, you can also set:
 EMAILGUARD_API_KEY=egsk_live_...
 ```
 
+## Usage
+
+The SDK exposes one root package. API groups are services on the main client,
+and request/response models are exported from the same package.
+
+```go
+import (
+    "context"
+    "os"
+
+    sdk "github.com/EmailGuard/emailguard-go"
+)
+
+client := sdk.New(os.Getenv("EMAILGUARD_API_KEY"))
+team, err := client.Teams.GetTeam(context.Background())
+```
+
+## Examples
+
+See the generated [`examples/`](./examples/) directory for runnable workflows.
+
 
 ## API Responses
 
@@ -39,14 +60,14 @@ REST API responses use a JSON envelope:
 { "code": "SUCCESS", "data": {}, "message": "" }
 ```
 
-Read `data` on success and use `code` / `message` for error handling.
+The public client unwraps `data` on success and raises/returns `APIError` for unsuccessful envelopes. Generated low-level transports remain available for advanced use.
 
 ## Related Packages
 
 - [@emailguard/sdk (TypeScript)](https://www.npmjs.com/package/@emailguard/sdk)
 - [@emailguard/mcp (MCP)](https://www.npmjs.com/package/@emailguard/mcp)
 - [github.com/EmailGuard/emailguard-go (Go)](https://pkg.go.dev/github.com/EmailGuard/emailguard-go) (this package)
-- [emailguard_sdk (Python)](https://pypi.org/project/emailguard_sdk/)
+- [emailguard-sdk (Python)](https://pypi.org/project/emailguard-sdk/)
 - [emailguard/emailguard-sdk (PHP)](https://packagist.org/packages/emailguard/emailguard-sdk)
 - [emailguard_sdk (Ruby)](https://rubygems.org/gems/emailguard_sdk)
 - [EmailGuard Zapier integration](https://emailguard.co/docs/api-reference/guides/getting-started)
@@ -54,3 +75,7 @@ Read `data` on success and use `code` / `message` for error handling.
 ## Support
 
 Questions, issues, or feedback? Email [dev@emailguard.co](mailto:dev@emailguard.co).
+
+## License
+
+MIT
