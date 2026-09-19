@@ -3,7 +3,7 @@ EmailGuard Public API
 
 Team-scoped REST API at /api/v1. Authenticate with `Authorization: Bearer egsk_live_...` or `X-API-Key`. Forks may register custom routes under /api/v1/tools/_* (requires `tools:read` / `tools:write` scopes). Async tool jobs return a `job_id` — poll `GET .../{jobId}/results` until complete. See /docs/api-reference.
 
-API version: 1.2
+API version: 1.3
 Contact: dev@emailguard.co
 */
 
@@ -42,7 +42,7 @@ func (r ApiDetectEmailRequest) Execute() (*EmailDetectResponse, *http.Response, 
 /*
 DetectEmail Detect email characteristics
 
-Analyzes an email for syntax, normalization, typo suggestions, role/public/relay/disposable signals. Invalid TLDs can return suggested_email and suggested_domain while syntax_validation remains false.
+Analyzes an email for syntax, normalization, typo suggestions, role/public/relay/disposable signals, evidence, DNS classification flags, and optional team policy overlay. Invalid TLDs can return suggested_email and suggested_domain while syntax_validation remains false.
 
  @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  @return ApiDetectEmailRequest

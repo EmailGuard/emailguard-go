@@ -3,7 +3,7 @@ EmailGuard Public API
 
 Team-scoped REST API at /api/v1. Authenticate with `Authorization: Bearer egsk_live_...` or `X-API-Key`. Forks may register custom routes under /api/v1/tools/_* (requires `tools:read` / `tools:write` scopes). Async tool jobs return a `job_id` — poll `GET .../{jobId}/results` until complete. See /docs/api-reference.
 
-API version: 1.2
+API version: 1.3
 Contact: dev@emailguard.co
 */
 
@@ -93,7 +93,7 @@ type Configuration struct {
 func NewConfiguration() *Configuration {
 	cfg := &Configuration{
 		DefaultHeader:    make(map[string]string),
-		UserAgent:        "emailguard-go/1.1.0",
+		UserAgent:        "emailguard-go/1.2.0",
 		Debug:            false,
 		Servers:          ServerConfigurations{
 			{

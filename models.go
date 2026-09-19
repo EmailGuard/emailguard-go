@@ -11,6 +11,7 @@ type CreateNotificationChannelInput = openapi.CreateNotificationChannelInput
 type CreateNotificationRuleInput = openapi.CreateNotificationRuleInput
 type EmailDetectData = openapi.EmailDetectData
 type EmailDetectEvidence = openapi.EmailDetectEvidence
+type EmailDetectMatchedRule = openapi.EmailDetectMatchedRule
 type EmailDetectResponse = openapi.EmailDetectResponse
 type GetNotificationChannelResponse = openapi.GetNotificationChannelResponse
 type GetNotificationChannelsResponse = openapi.GetNotificationChannelsResponse

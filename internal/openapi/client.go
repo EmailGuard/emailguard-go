@@ -3,7 +3,7 @@ EmailGuard Public API
 
 Team-scoped REST API at /api/v1. Authenticate with `Authorization: Bearer egsk_live_...` or `X-API-Key`. Forks may register custom routes under /api/v1/tools/_* (requires `tools:read` / `tools:write` scopes). Async tool jobs return a `job_id` — poll `GET .../{jobId}/results` until complete. See /docs/api-reference.
 
-API version: 1.2
+API version: 1.3
 Contact: dev@emailguard.co
 */
 
@@ -42,7 +42,7 @@ var (
 	queryDescape    = strings.NewReplacer( "%5B", "[", "%5D", "]" )
 )
 
-// APIClient manages communication with the EmailGuard Public API API v1.2
+// APIClient manages communication with the EmailGuard Public API API v1.3
 // In most cases there should be only one, shared, APIClient.
 type APIClient struct {
 	cfg    *Configuration

@@ -135,7 +135,7 @@ func TestPublicOperations(t *testing.T) {
 				t.Fatalf("authorization = %q", r.Header.Get("Authorization"))
 			}
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte("{\"code\":\"SUCCESS\",\"data\":{\"confidence\":\"example\",\"detection_source\":\"example\",\"disposable\":false,\"disposable_provider\":\"example\",\"domain\":\"example\",\"email\":\"example\",\"evidence\":{\"cluster_provider\":\"example\",\"detection_layer\":\"example\",\"source_count\":0},\"normalized\":\"example\",\"public_domain\":false,\"relay_domain\":false,\"relay_provider\":\"example\",\"role_address\":false,\"subaddressing\":false,\"suggested_domain\":\"example\",\"suggested_email\":\"example\",\"syntax_validation\":false},\"message\":\"ok\"}"))
+			_, _ = w.Write([]byte("{\"code\":\"SUCCESS\",\"data\":{\"confidence\":\"example\",\"detection_source\":\"example\",\"disposable\":false,\"disposable_provider\":\"example\",\"domain\":\"example\",\"email\":\"example\",\"evidence\":{\"cluster_provider\":\"example\",\"detection_layer\":\"example\",\"source_count\":0},\"infra_cluster_match\":false,\"matched_rules\":[],\"mx_present\":false,\"normalized\":\"example\",\"policy_action\":\"example\",\"public_domain\":false,\"relay_domain\":false,\"relay_provider\":\"example\",\"role_address\":false,\"subaddressing\":false,\"suggested_action\":\"example\",\"suggested_domain\":\"example\",\"suggested_email\":\"example\",\"syntax_validation\":false,\"wildcard_dns\":false},\"message\":\"ok\"}"))
 		}))
 		defer server.Close()
 		client := sdk.New("test-key", sdk.WithBaseURL(server.URL))

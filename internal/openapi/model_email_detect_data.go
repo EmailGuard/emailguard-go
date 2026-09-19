@@ -3,7 +3,7 @@ EmailGuard Public API
 
 Team-scoped REST API at /api/v1. Authenticate with `Authorization: Bearer egsk_live_...` or `X-API-Key`. Forks may register custom routes under /api/v1/tools/_* (requires `tools:read` / `tools:write` scopes). Async tool jobs return a `job_id` — poll `GET .../{jobId}/results` until complete. See /docs/api-reference.
 
-API version: 1.2
+API version: 1.3
 Contact: dev@emailguard.co
 */
 
@@ -20,7 +20,7 @@ var _ MappedNullable = &EmailDetectData{}
 
 // EmailDetectData struct for EmailDetectData
 type EmailDetectData struct {
-	// high, medium, or low when a disposable verdict includes a confidence signal.
+	// high, medium, or low. Always set on a successful detect response.
 	Confidence *string `json:"confidence,omitempty"`
 	DetectionSource *string `json:"detection_source,omitempty"`
 	Disposable *bool `json:"disposable,omitempty"`
@@ -28,17 +28,29 @@ type EmailDetectData struct {
 	Domain *string `json:"domain,omitempty"`
 	Email *string `json:"email,omitempty"`
 	Evidence *EmailDetectEvidence `json:"evidence,omitempty"`
+	// True when the domain shares MX/A infrastructure with a known disposable cluster.
+	InfraClusterMatch *bool `json:"infra_cluster_match,omitempty"`
+	// Matched catalog/staff rules without exposing patterns.
+	MatchedRules []EmailDetectMatchedRule `json:"matched_rules,omitempty"`
+	// Set when a cached DNS snapshot exists for the domain (not a mailbox probe).
+	MxPresent *bool `json:"mx_present,omitempty"`
 	Normalized *string `json:"normalized,omitempty"`
+	// Team overlay: allow or deny. Omitted when no team policy matched.
+	PolicyAction *string `json:"policy_action,omitempty"`
 	PublicDomain *bool `json:"public_domain,omitempty"`
 	RelayDomain *bool `json:"relay_domain,omitempty"`
 	RelayProvider *string `json:"relay_provider,omitempty"`
 	RoleAddress *bool `json:"role_address,omitempty"`
 	Subaddressing *bool `json:"subaddressing,omitempty"`
+	// Customer-policy action: allow or block. Omitted when no team policy matched.
+	SuggestedAction *string `json:"suggested_action,omitempty"`
 	// Corrected domain candidate when a domain or TLD typo rule matches.
 	SuggestedDomain *string `json:"suggested_domain,omitempty"`
 	// Corrected email candidate when a domain or TLD typo rule matches.
 	SuggestedEmail *string `json:"suggested_email,omitempty"`
 	SyntaxValidation *bool `json:"syntax_validation,omitempty"`
+	// True when the domain answers wildcard DNS typical of temp-mail farms.
+	WildcardDns *bool `json:"wildcard_dns,omitempty"`
 }
 
 // NewEmailDetectData instantiates a new EmailDetectData object
@@ -282,6 +294,102 @@ func (o *EmailDetectData) SetEvidence(v EmailDetectEvidence) {
 	o.Evidence = &v
 }
 
+// GetInfraClusterMatch returns the InfraClusterMatch field value if set, zero value otherwise.
+func (o *EmailDetectData) GetInfraClusterMatch() bool {
+	if o == nil || IsNil(o.InfraClusterMatch) {
+		var ret bool
+		return ret
+	}
+	return *o.InfraClusterMatch
+}
+
+// GetInfraClusterMatchOk returns a tuple with the InfraClusterMatch field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *EmailDetectData) GetInfraClusterMatchOk() (*bool, bool) {
+	if o == nil || IsNil(o.InfraClusterMatch) {
+		return nil, false
+	}
+	return o.InfraClusterMatch, true
+}
+
+// HasInfraClusterMatch returns a boolean if a field has been set.
+func (o *EmailDetectData) HasInfraClusterMatch() bool {
+	if o != nil && !IsNil(o.InfraClusterMatch) {
+		return true
+	}
+
+	return false
+}
+
+// SetInfraClusterMatch gets a reference to the given bool and assigns it to the InfraClusterMatch field.
+func (o *EmailDetectData) SetInfraClusterMatch(v bool) {
+	o.InfraClusterMatch = &v
+}
+
+// GetMatchedRules returns the MatchedRules field value if set, zero value otherwise.
+func (o *EmailDetectData) GetMatchedRules() []EmailDetectMatchedRule {
+	if o == nil || IsNil(o.MatchedRules) {
+		var ret []EmailDetectMatchedRule
+		return ret
+	}
+	return o.MatchedRules
+}
+
+// GetMatchedRulesOk returns a tuple with the MatchedRules field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *EmailDetectData) GetMatchedRulesOk() ([]EmailDetectMatchedRule, bool) {
+	if o == nil || IsNil(o.MatchedRules) {
+		return nil, false
+	}
+	return o.MatchedRules, true
+}
+
+// HasMatchedRules returns a boolean if a field has been set.
+func (o *EmailDetectData) HasMatchedRules() bool {
+	if o != nil && !IsNil(o.MatchedRules) {
+		return true
+	}
+
+	return false
+}
+
+// SetMatchedRules gets a reference to the given []EmailDetectMatchedRule and assigns it to the MatchedRules field.
+func (o *EmailDetectData) SetMatchedRules(v []EmailDetectMatchedRule) {
+	o.MatchedRules = v
+}
+
+// GetMxPresent returns the MxPresent field value if set, zero value otherwise.
+func (o *EmailDetectData) GetMxPresent() bool {
+	if o == nil || IsNil(o.MxPresent) {
+		var ret bool
+		return ret
+	}
+	return *o.MxPresent
+}
+
+// GetMxPresentOk returns a tuple with the MxPresent field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *EmailDetectData) GetMxPresentOk() (*bool, bool) {
+	if o == nil || IsNil(o.MxPresent) {
+		return nil, false
+	}
+	return o.MxPresent, true
+}
+
+// HasMxPresent returns a boolean if a field has been set.
+func (o *EmailDetectData) HasMxPresent() bool {
+	if o != nil && !IsNil(o.MxPresent) {
+		return true
+	}
+
+	return false
+}
+
+// SetMxPresent gets a reference to the given bool and assigns it to the MxPresent field.
+func (o *EmailDetectData) SetMxPresent(v bool) {
+	o.MxPresent = &v
+}
+
 // GetNormalized returns the Normalized field value if set, zero value otherwise.
 func (o *EmailDetectData) GetNormalized() string {
 	if o == nil || IsNil(o.Normalized) {
@@ -312,6 +420,38 @@ func (o *EmailDetectData) HasNormalized() bool {
 // SetNormalized gets a reference to the given string and assigns it to the Normalized field.
 func (o *EmailDetectData) SetNormalized(v string) {
 	o.Normalized = &v
+}
+
+// GetPolicyAction returns the PolicyAction field value if set, zero value otherwise.
+func (o *EmailDetectData) GetPolicyAction() string {
+	if o == nil || IsNil(o.PolicyAction) {
+		var ret string
+		return ret
+	}
+	return *o.PolicyAction
+}
+
+// GetPolicyActionOk returns a tuple with the PolicyAction field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *EmailDetectData) GetPolicyActionOk() (*string, bool) {
+	if o == nil || IsNil(o.PolicyAction) {
+		return nil, false
+	}
+	return o.PolicyAction, true
+}
+
+// HasPolicyAction returns a boolean if a field has been set.
+func (o *EmailDetectData) HasPolicyAction() bool {
+	if o != nil && !IsNil(o.PolicyAction) {
+		return true
+	}
+
+	return false
+}
+
+// SetPolicyAction gets a reference to the given string and assigns it to the PolicyAction field.
+func (o *EmailDetectData) SetPolicyAction(v string) {
+	o.PolicyAction = &v
 }
 
 // GetPublicDomain returns the PublicDomain field value if set, zero value otherwise.
@@ -474,6 +614,38 @@ func (o *EmailDetectData) SetSubaddressing(v bool) {
 	o.Subaddressing = &v
 }
 
+// GetSuggestedAction returns the SuggestedAction field value if set, zero value otherwise.
+func (o *EmailDetectData) GetSuggestedAction() string {
+	if o == nil || IsNil(o.SuggestedAction) {
+		var ret string
+		return ret
+	}
+	return *o.SuggestedAction
+}
+
+// GetSuggestedActionOk returns a tuple with the SuggestedAction field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *EmailDetectData) GetSuggestedActionOk() (*string, bool) {
+	if o == nil || IsNil(o.SuggestedAction) {
+		return nil, false
+	}
+	return o.SuggestedAction, true
+}
+
+// HasSuggestedAction returns a boolean if a field has been set.
+func (o *EmailDetectData) HasSuggestedAction() bool {
+	if o != nil && !IsNil(o.SuggestedAction) {
+		return true
+	}
+
+	return false
+}
+
+// SetSuggestedAction gets a reference to the given string and assigns it to the SuggestedAction field.
+func (o *EmailDetectData) SetSuggestedAction(v string) {
+	o.SuggestedAction = &v
+}
+
 // GetSuggestedDomain returns the SuggestedDomain field value if set, zero value otherwise.
 func (o *EmailDetectData) GetSuggestedDomain() string {
 	if o == nil || IsNil(o.SuggestedDomain) {
@@ -570,6 +742,38 @@ func (o *EmailDetectData) SetSyntaxValidation(v bool) {
 	o.SyntaxValidation = &v
 }
 
+// GetWildcardDns returns the WildcardDns field value if set, zero value otherwise.
+func (o *EmailDetectData) GetWildcardDns() bool {
+	if o == nil || IsNil(o.WildcardDns) {
+		var ret bool
+		return ret
+	}
+	return *o.WildcardDns
+}
+
+// GetWildcardDnsOk returns a tuple with the WildcardDns field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *EmailDetectData) GetWildcardDnsOk() (*bool, bool) {
+	if o == nil || IsNil(o.WildcardDns) {
+		return nil, false
+	}
+	return o.WildcardDns, true
+}
+
+// HasWildcardDns returns a boolean if a field has been set.
+func (o *EmailDetectData) HasWildcardDns() bool {
+	if o != nil && !IsNil(o.WildcardDns) {
+		return true
+	}
+
+	return false
+}
+
+// SetWildcardDns gets a reference to the given bool and assigns it to the WildcardDns field.
+func (o *EmailDetectData) SetWildcardDns(v bool) {
+	o.WildcardDns = &v
+}
+
 func (o EmailDetectData) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
@@ -601,8 +805,20 @@ func (o EmailDetectData) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Evidence) {
 		toSerialize["evidence"] = o.Evidence
 	}
+	if !IsNil(o.InfraClusterMatch) {
+		toSerialize["infra_cluster_match"] = o.InfraClusterMatch
+	}
+	if !IsNil(o.MatchedRules) {
+		toSerialize["matched_rules"] = o.MatchedRules
+	}
+	if !IsNil(o.MxPresent) {
+		toSerialize["mx_present"] = o.MxPresent
+	}
 	if !IsNil(o.Normalized) {
 		toSerialize["normalized"] = o.Normalized
+	}
+	if !IsNil(o.PolicyAction) {
+		toSerialize["policy_action"] = o.PolicyAction
 	}
 	if !IsNil(o.PublicDomain) {
 		toSerialize["public_domain"] = o.PublicDomain
@@ -619,6 +835,9 @@ func (o EmailDetectData) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Subaddressing) {
 		toSerialize["subaddressing"] = o.Subaddressing
 	}
+	if !IsNil(o.SuggestedAction) {
+		toSerialize["suggested_action"] = o.SuggestedAction
+	}
 	if !IsNil(o.SuggestedDomain) {
 		toSerialize["suggested_domain"] = o.SuggestedDomain
 	}
@@ -627,6 +846,9 @@ func (o EmailDetectData) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.SyntaxValidation) {
 		toSerialize["syntax_validation"] = o.SyntaxValidation
+	}
+	if !IsNil(o.WildcardDns) {
+		toSerialize["wildcard_dns"] = o.WildcardDns
 	}
 	return toSerialize, nil
 }
